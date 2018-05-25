@@ -1,17 +1,17 @@
 Arch Linux Instalation Guide
 Official Instructions on https://wiki.archlinux.org/index.php/installation_guide
 
--- Create the bootable usb
-- Download Arch Linux iso from https://www.archlinux.org/download/
-- Write iso to usb
-	• Linux:
-		• Using dd
-			$ dd bs=4M if=/path/to/archlinux.iso of=/dev/sdx status=progress oflag=sync
-		• Using gnome-disks
-			Open gnome disks, select device, click gears under the partitions 
-			section, select Restore Partition Image, select iso file
-	• Windows:
-		• Just use rufus from https://rufus.akeo.ie/
+- Create the bootable usb
+	- Download Arch Linux iso from https://www.archlinux.org/download/
+	- Write iso to usb
+		• Linux:
+			• Using dd
+				$ dd bs=4M if=/path/to/archlinux.iso of=/dev/sdx status=progress oflag=sync
+			• Using gnome-disks
+				Open gnome disks, select device, click gears under the partitions 
+				section, select Restore Partition Image, select iso file
+		• Windows:
+			• Just use rufus from https://rufus.akeo.ie/
 
 - Boot Arch Linux from usb
 
@@ -63,7 +63,8 @@ Official Instructions on https://wiki.archlinux.org/index.php/installation_guide
 - Run hwclock(8) to generate /etc/adjtime
 	$ hwclock --systohc
 
-- Uncomment en_US.UTF-8 UTF-8 and other nessesary (eg. el_GR.UTF-8 UTF-8) in /etc/locale.gen, and generate them with:
+- Uncomment en_US.UTF-8 UTF-8 and other nessesary (eg. el_GR.UTF-8 UTF-8)
+in /etc/locale.gen, and generate them with:
 	$ locale-gen
 
 - Create the /etc/locale.conf file substituting your chosen locale:
