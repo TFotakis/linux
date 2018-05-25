@@ -1,0 +1,293 @@
+Arch Linux Instalation Guide
+Official Instructions on https://wiki.archlinux.org/index.php/installation_guide
+
+-- Create the bootable usb
+- Download Arch Linux iso from https://www.archlinux.org/download/
+- Write iso to usb
+	• Linux:
+		• Using dd
+			$ dd bs=4M if=/path/to/archlinux.iso of=/dev/sdx status=progress oflag=sync
+		• Using gnome-disks
+			Open gnome disks, select device, click gears under the partitions 
+			section, select Restore Partition Image, select iso file
+	• Windows:
+		• Just use rufus from https://rufus.akeo.ie/
+
+- Boot Arch Linux from usb
+
+- WiFi Connection
+	• Try to connect to wifi using 
+		$ wifi-menu
+	• If not working try command below and retry 
+		$ rfkill unblock wifi
+
+- Disk Partitioning
+	* As Standalone:
+		• Launch the cfdisk partitioning utility
+			$ cfdisk
+		• Delete all unnessesary partitions
+		• Create a 0.5GB boot partition if it is not already existing
+		• Create another partition for the root with the remainder of the disks capacity
+
+- Partition formating
+	Suppose from now on that /dev/sda1 is refered to the /boot partition and /dev/sda2 to 
+	the / partition
+	• Format /boot
+		$ mkfs.fat -F32 /dev/sda1
+		$ gdisk /dev/sda
+		• use to name partitions
+		• use to change type of boot partition to "EF00"
+	• Format /
+		$ mkfs.ext4 /dev/sda2
+
+- Mount partitions
+	$ mount /dev/sda2 /mnt
+	$ mkdir /mnt/boot
+	$ mount /dev/sda1 /mnt/boot
+
+- Select the mirrors
+	$ nano /etc/pacman.d/mirrorlist
+
+- Install the base and base-devel packages
+	$ pacstrap /mnt base base-devel
+
+- Generate an fstab file (use -U or -L to define by UUID or labels, respectively):
+	$ genfstab -L /mnt >> /mnt/etc/fstab
+
+- Chroot
+	$ arch-chroot /mnt
+
+- Set the time zone
+	$ ln -sf /usr/share/zoneinfo/Europe/Athens /etc/localtime
+
+- Run hwclock(8) to generate /etc/adjtime
+	$ hwclock --systohc
+
+- Uncomment en_US.UTF-8 UTF-8 and other nessesary (eg. el_GR.UTF-8 UTF-8) in /etc/locale.gen, and generate them with:
+	$ locale-gen
+
+- Create the /etc/locale.conf file substituting your chosen locale:
+	$ echo LANG=en_US.UTF-8 > /etc/locale.conf
+
+- Set the LANG variable in locale.conf
+	$ export LANG=en_US.UTF-8
+
+- Create the hostname file:
+	$ echo MYHOSTNAME > /etc/hostname
+
+- Add matching entries to hosts:
+	$ nano /etc/hosts
+	• Add the lines below:
+		127.0.0.1	localhost
+		::1			localhost
+		127.0.1.1	MYHOSTNAME.localdomain	MYHOSTNAME
+
+- Set root user password
+	$ passwd
+
+- Create user
+	$ useradd -m -g users -G wheel,storage,power -s /bin/bash MYUSERNAME
+
+- Set MYUSERNAME user password
+	$ passwd MYUSERNAME
+
+- Install sudo
+	$ pacman -S sudo
+
+- Configure sudoers file to give permission to sudo to MYUSERNAME with no password needed
+	$ EDITOR=nano visudo
+	• Uncomment these  lines:
+		%wheel ALL=(ALL) ALL
+		%wheel ALL=(ALL) NOPASSWD: ALL
+		%sudo ALL=(ALL) NOPASSWD: ALL
+	• Add this line AT THE END of the file. MAKE IT THE LAST LINE or else it will NOT work:
+		MYUSERNAME ALL=(ALL) NOPASSWD: ALL
+
+- Install yaourt
+	More info: https://www.ostechnix.com/install-yaourt-arch-linux/
+	$ nano /etc/pacman.conf
+	• Add these lines at the bottom of the file:
+	[archlinuxfr]
+	SigLevel = Never
+	Server = http://repo.archlinux.fr/$arch
+	$ pacman -Sy yaourt
+
+- Install pacaur
+	$ yaourt -S pacaur
+
+- Install oh-my-zsh
+	$ pacaur -Syu zsh zsh-completions oh-my-zsh-git
+	$ chsh -s $(which zsh)
+	$ sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+	• Copy text below to ~/.zshrc :
+		export PATH=$HOME/bin:/usr/local/bin:$PATH
+		export ZSH=~/.oh-my-zsh
+		ZSH_THEME="robbyrussell"
+		HYPHEN_INSENSITIVE="true"
+		export UPDATE_ZSH_DAYS=7
+		ENABLE_CORRECTION="true"
+		COMPLETION_WAITING_DOTS="true"
+		HIST_STAMPS="dd.mm.yyyy"
+		plugins=(
+		git github lwd npm pip python pylint sudo systemd web-search archlinux autopep8 common-aliases dircycle django 
+		)
+		source $ZSH/oh-my-zsh.sh
+		if [[ -n $SSH_CONNECTION ]]; then
+		export EDITOR='nano'
+		else
+		export EDITOR='nano'
+		fi
+		export SSH_KEY_PATH="~/.ssh/rsa_id"
+	• Copy .zshrc and .oh-my-zsh to /root folder
+		$ cp ~/.zshrc /root/.zshrc
+		$ cp -r ~/.oh-my-zsh /root/.oh-my-zsh
+
+- Install general packages using:
+	$ pacaur -S --noedit --noconfirm PACKAGE_NAME1 PACKAGE_NAME2 ...
+	• Basic packages:
+		xorg-server
+		xorg-server-utils
+		xorg-xinit
+		xorg-twm
+		xorg-xclock
+		xterm
+		mesa
+		xf86-video-intel
+		xf86-input-synaptics
+		intel-dri
+		intel-ucode
+		alsa-utils
+		pulseaudio
+		pulseaudio-bluetooth
+		pulseaudio-jack
+		pavucontrol
+		netctl
+		wpa-supplicant
+		dhcpd
+		dhclient
+		dialog
+		ppp
+		git
+
+	• Install Desktop:
+		cinnamon
+		cinnamon-desktop
+		cinnamon-sound-effects
+		cinnamon-translations
+		lightdm
+		lightdm-gtk-greeter
+		lightdm-gtk-greeter-settings
+		
+		$ systemctl enable lightdm
+		
+		• Enabling autologin
+			More info: https://wiki.archlinux.org/index.php/LightDM
+			$ nano /etc/lightdm/lightdm.conf
+			• Find and change line: 
+				autologin-user=MYUSERNAME
+			$ groupadd -r autologin
+			$ gpasswd -a MYUSERNAME autologin
+
+	• Codecs: 
+		a52dec
+		faac
+		faad2
+		flac
+		jasper
+		lame
+		libdca
+		libdv
+		libmad
+		libmpeg2
+		libtheora
+		libvorbis
+		libxv
+		wavpack
+		x264
+		xvidcore
+		gstreamer0.10-plugins
+
+	• Additional packages:
+		adapta-gtk-theme
+		anaconda
+		android-studio
+		arduino
+		audio-recorder
+		avrdude
+		bash-completion
+		bleachbit-git
+		blender
+		blueberry
+		bpm-tools
+		brasero
+		cheese
+		gnome-themes-extra
+		gnome-panel
+		gnome-system-monitor
+		cmus
+		file-roller
+		filezilla
+		firefox
+		gedit
+		gimp
+		gnome-bluetooth
+		gnome-disk-utility
+		gnome-font-viewer
+		google-chrome
+		gparted
+		gvfs
+		gvfs-afc
+		gvfs-goa
+		gvfs-google
+		gvfs-gphoto2
+		gvfs-mtp
+		gvfs-nfs
+		gvfs-smb
+		htop
+		inkscape
+		intel-opencl-runtime
+		intel-opencl-sdk
+		intel-tbb
+		jetbrains-toolbox
+		jpegoptim
+		kdenlive
+		krita
+		libreoffice
+		mint-sounds
+		mtpfs
+		ncurses
+		ncurses5-compat-libs
+		nemo-fileroller
+		ntfs-3g
+		nufraw
+		openssh
+		openvpn
+		opera
+		pacaur
+		paper-icon-theme-git
+		platformio
+		postman
+		puddletag
+		qbittorrent
+		redshift
+		screen
+		shutter
+		skypeforlinux-stable-bin
+		sound-theme-freedesktop
+		teamviewer
+		tor-browser
+		ttf-croscore
+		ttf-dejavu
+		ttf-droid
+		ttf-opensans
+		ttf-roboto
+		ttf-tahoma
+		ufraw-thumbnailer
+		unity-editor
+		vidalia
+		visual-studio-code-bin
+		vlc
+		yaourt
+		youtube-dl
+		youtube-dl-gui-git
+		
