@@ -104,6 +104,11 @@ in /etc/locale.gen, and generate them with:
 	• Add this line AT THE END of the file. MAKE IT THE LAST LINE or else it will NOT work:
 		MYUSERNAME ALL=(ALL) NOPASSWD: ALL
 
+- Install wifi support:
+	$ pacman -S netctl wpa-supplicant dhclient dialog ppp
+	$ systemctl enable NetworkManager
+	$ systemctl start NetworkManager
+
 - Install yaourt
 	More info: https://www.ostechnix.com/install-yaourt-arch-linux/
 	$ nano /etc/pacman.conf
@@ -147,7 +152,6 @@ in /etc/locale.gen, and generate them with:
 	$ pacaur -S --noedit --noconfirm PACKAGE_NAME1 PACKAGE_NAME2 ...
 	• Basic packages:
 		xorg-server
-		xorg-server-utils
 		xorg-xinit
 		xorg-twm
 		xorg-xclock
@@ -162,17 +166,11 @@ in /etc/locale.gen, and generate them with:
 		pulseaudio-bluetooth
 		pulseaudio-jack
 		pavucontrol
-		netctl
-		wpa-supplicant
-		dhcpd
-		dhclient
-		dialog
-		ppp
+		
 		git
 
 	• Install Desktop:
 		cinnamon
-		cinnamon-desktop
 		cinnamon-sound-effects
 		cinnamon-translations
 		lightdm
@@ -236,6 +234,7 @@ in /etc/locale.gen, and generate them with:
 		gnome-font-viewer
 		google-chrome
 		gparted
+		gthumb
 		gvfs
 		gvfs-afc
 		gvfs-goa
@@ -282,6 +281,7 @@ in /etc/locale.gen, and generate them with:
 		ttf-droid
 		ttf-opensans
 		ttf-roboto
+		ttf-roboto-mono
 		ttf-tahoma
 		ufraw-thumbnailer
 		unity-editor
