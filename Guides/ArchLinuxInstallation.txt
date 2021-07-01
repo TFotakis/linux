@@ -1,4 +1,4 @@
-Arch Linux Instalation Guide
+Arch Linux Installation Guide
 Official Instructions on https://wiki.archlinux.org/index.php/installation_guide
 
 - Create the bootable usb
@@ -8,7 +8,7 @@ Official Instructions on https://wiki.archlinux.org/index.php/installation_guide
 			• Using dd
 				$ dd bs=4M if=/path/to/archlinux.iso of=/dev/sdx status=progress oflag=sync
 			• Using gnome-disks
-				Open gnome disks, select device, click gears under the partitions 
+				Open gnome disks, select device, click gears under the partitions
 				section, select Restore Partition Image, select iso file
 		• Windows:
 			• Just use rufus from https://rufus.akeo.ie/
@@ -16,10 +16,35 @@ Official Instructions on https://wiki.archlinux.org/index.php/installation_guide
 - Boot Arch Linux from usb
 
 - WiFi Connection
-	• Try to connect to wifi using 
-		$ wifi-menu
-	• If not working try command below and retry 
-		$ rfkill unblock wifi
+	- wifi-menu method:
+		• Try to connect to wifi using
+			$ wifi-menu
+		• If not working try command below and retry
+			$ rfkill unblock wifi
+	- iwctl method
+		$ device list
+		$ station <device> scan
+		$ station <device> get-networks
+		$ station <device> connect <SSID>
+
+		• For known networks use:
+			$ iwctl --passphrase <passphrase> station <device> connect <SSID>
+
+- Ethernet Connection
+	• ifconfig <interface> <ip> netmask <netmask>
+		e.g.
+		$ ifconfig enp0s1 192.168.1.1 netmask 255.255.255.0
+	• route add default gw <Gateway>
+		e.g.
+		$ route add default gw 192.168.1.254
+	• Add appropriate nameservers as:
+		$ nano /etc/resolv.conf
+		e.g.
+			nameserver 1.1.1.1
+			nameserver 1.0.0.1
+	$ systemctl stop dhcpd@<interface>.service
+	$ systemctl restart dhcpd.service
+
 
 - Disk Partitioning
 	* As Standalone:
@@ -30,7 +55,7 @@ Official Instructions on https://wiki.archlinux.org/index.php/installation_guide
 		• Create another partition for the root with the remainder of the disks capacity
 
 - Partition formating
-	Suppose from now on that /dev/sda1 is refered to the /boot partition and /dev/sda2 to 
+	Suppose from now on that /dev/sda1 is referred to the /boot partition and /dev/sda2 to
 	the / partition
 	• Format /boot
 		$ mkfs.fat -F32 /dev/sda1
@@ -41,21 +66,21 @@ Official Instructions on https://wiki.archlinux.org/index.php/installation_guide
 		$ mkfs.ext4 /dev/sda2
 
 - Mount partitions
-	$ mount /dev/sda2 /mnt
-	$ mkdir /mnt/boot
-	$ mount /dev/sda1 /mnt/boot
+	$ mount /dev/sda2 mnt
+	$ mkdir mnt/boot
+	$ mount /dev/sda1 mnt/boot
 
 - Select the mirrors
 	$ nano /etc/pacman.d/mirrorlist
 
 - Install the base and base-devel packages
-	$ pacstrap /mnt base base-devel
+	$ pacstrap mnt base base-devel linux linux-firmware
 
 - Generate an fstab file (use -U or -L to define by UUID or labels, respectively):
-	$ genfstab -L /mnt >> /mnt/etc/fstab
+	$ genfstab -U mnt >> mnt/etc/fstab
 
 - Chroot
-	$ arch-chroot /mnt
+	$ arch-chroot mnt
 
 - Set the time zone
 	$ ln -sf /usr/share/zoneinfo/Europe/Athens /etc/localtime
@@ -105,24 +130,46 @@ in /etc/locale.gen, and generate them with:
 		MYUSERNAME ALL=(ALL) NOPASSWD: ALL
 
 - Install wifi support:
-	$ pacman -S netctl wpa-supplicant dhclient dialog ppp
+	$ pacman -S netctl wpa_supplicant dhclient dialog ppp
 	$ systemctl enable NetworkManager
 	$ systemctl start NetworkManager
 
-- Install yaourt
-	More info: https://www.ostechnix.com/install-yaourt-arch-linux/
-	$ nano /etc/pacman.conf
-	• Add these lines at the bottom of the file:
-	[archlinuxfr]
-	SigLevel = Never
-	Server = http://repo.archlinux.fr/$arch
-	$ pacman -Sy yaourt
+- Install systemd-boot
+	$ bootctl install
+	$ nano /boot/loader/entries/arch.conf
+		Paste below configuration
 
-- Install pacaur
-	$ yaourt -S pacaur
+		title   Arch Linux
+		linux   /vmlinuz-linux
+		initrd  /intel-ucode.img
+		initrd  /initramfs-linux.img
+		options root=UUID=ROOT_PARTITION_UUID rw
+
+		Find the ROOT_PARTITION_UUID on /etc/fstab
+
+- Install Grub
+	$ pacman -S grub
+	$ mkdir /boot/grub
+	$ grub-mkconfig -o /boot/grub/grub.cfg
+	$ grub-install /dev/sda
+
+- Install yay
+	# Maybe not needed
+	$ exit
+	$ arch-chroot -u MYUSERNAME mnt
+	$ export HOME=/home/MYUSERNAME
+	$ cd
+
+	$ su - MYUSERNAME
+	$ pacman -S git
+	$ git clone https://aur.archlinux.org/yay.git
+	$ cd yay
+	$ makepkg -si
+	$ cd ..
+	$ rm -rf yay
 
 - Install oh-my-zsh
-	$ pacaur -Syu zsh zsh-completions oh-my-zsh-git
+	$ yay -Syu zsh zsh-completions oh-my-zsh-git
 	$ chsh -s $(which zsh)
 	$ sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 	• Copy text below to ~/.zshrc :
@@ -135,7 +182,7 @@ in /etc/locale.gen, and generate them with:
 		COMPLETION_WAITING_DOTS="true"
 		HIST_STAMPS="dd.mm.yyyy"
 		plugins=(
-		git github lwd npm pip python pylint sudo systemd web-search archlinux autopep8 common-aliases dircycle django 
+		git github lwd npm pip python pylint sudo systemd web-search archlinux autopep8 common-aliases dircycle django
 		)
 		source $ZSH/oh-my-zsh.sh
 		if [[ -n $SSH_CONNECTION ]]; then
@@ -148,8 +195,13 @@ in /etc/locale.gen, and generate them with:
 		$ cp ~/.zshrc /root/.zshrc
 		$ cp -r ~/.oh-my-zsh /root/.oh-my-zsh
 
+- Accelerate package downloads by sorting mirrorlist
+	$ yay -S reflector
+	$ sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+	$ reflector --latest 200 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+
 - Install general packages using:
-	$ pacaur -S --noedit --noconfirm PACKAGE_NAME1 PACKAGE_NAME2 ...
+	$ yay -S PACKAGE_NAME1 PACKAGE_NAME2 ...
 	• Basic packages:
 		xorg-server
 		xorg-xinit
@@ -158,7 +210,7 @@ in /etc/locale.gen, and generate them with:
 		xterm
 		mesa
 		xf86-video-intel
-		xf86-input-synaptics
+		xf86-input-libinput
 		intel-dri
 		intel-ucode
 		alsa-utils
@@ -166,7 +218,7 @@ in /etc/locale.gen, and generate them with:
 		pulseaudio-bluetooth
 		pulseaudio-jack
 		pavucontrol
-		
+
 		git
 
 	• Install Desktop:
@@ -176,18 +228,18 @@ in /etc/locale.gen, and generate them with:
 		lightdm
 		lightdm-gtk-greeter
 		lightdm-gtk-greeter-settings
-		
+
 		$ systemctl enable lightdm
-		
+
 		• Enabling autologin
 			More info: https://wiki.archlinux.org/index.php/LightDM
 			$ nano /etc/lightdm/lightdm.conf
-			• Find and change line: 
+			• Find and change line:
 				autologin-user=MYUSERNAME
 			$ groupadd -r autologin
 			$ gpasswd -a MYUSERNAME autologin
 
-	• Codecs: 
+	• Codecs:
 		a52dec
 		faac
 		faad2
@@ -263,7 +315,6 @@ in /etc/locale.gen, and generate them with:
 		openssh
 		openvpn
 		opera
-		pacaur
 		paper-icon-theme-git
 		platformio
 		postman
@@ -291,4 +342,40 @@ in /etc/locale.gen, and generate them with:
 		yaourt
 		youtube-dl
 		youtube-dl-gui-git
-		
+
+-------------------------------------------------------------------------------
+Create Image to emulate HDD with partitions to make the installation
+
+- Make sure you have already installed arch-install-scripts
+	$ yay -S arch-install-scripts
+
+- Create a disk image of 10G:
+	$ dd if=/dev/zero of=disk.img bs=1024k seek=10000 count=0
+
+- Mount it as a loopback device:
+	$ losetup -f disk.img
+	$ losetup -a
+
+- Use fdisk to create partitions:
+	$ fdisk /dev/loop0
+
+- Format partitions:
+	$ mkfs.fat -F32 /dev/loop0p1
+	$ mkfs.ext4 /dev/loop0p2
+
+- Mount partitions
+	$ losetup --partscan --find --show disk.img
+	$ mkdir mnt
+	$ mount /dev/loop0p2 mnt
+	$ mkdir mnt/boot
+	$ mount /dev/loop0p1 mnt/boot
+
+- Continue installation from step "Install the base and base-devel packages"
+...
+...
+
+- When done unloop the device:
+	$ losetup -d /dev/loop0
+
+- Copy the image to the target device with dd
+	$ dd if=disk.img of=/dev/sdX
