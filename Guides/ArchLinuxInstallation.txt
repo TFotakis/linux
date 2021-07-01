@@ -99,14 +99,14 @@ in /etc/locale.gen, and generate them with:
 	$ export LANG=en_US.UTF-8
 
 - Create the hostname file:
-	$ echo MYHOSTNAME > /etc/hostname
+	$ echo <MYHOSTNAME> > /etc/hostname
 
 - Add matching entries to hosts:
 	$ nano /etc/hosts
 	• Add the lines below:
 		127.0.0.1	localhost
 		::1			localhost
-		127.0.1.1	MYHOSTNAME.localdomain	MYHOSTNAME
+		127.0.1.1	<MYHOSTNAME>.<localdomain>	<MYHOSTNAME>
 
 - Set root user password
 	$ passwd
