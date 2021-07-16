@@ -130,7 +130,7 @@ in /etc/locale.gen, and generate them with:
 		MYUSERNAME ALL=(ALL) NOPASSWD: ALL
 
 - Install wifi support:
-	$ pacman -S netctl wpa_supplicant dhclient dialog ppp
+	$ pacman -S networkmanager netctl wpa_supplicant dhclient dialog ppp
 	$ systemctl enable NetworkManager
 	$ systemctl start NetworkManager
 
